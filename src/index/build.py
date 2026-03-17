@@ -14,7 +14,7 @@ def build_index(
     df: pd.DataFrame,
     feature_columns: List[str],
     n_neighbors: int = 6,
-) -> Tuple[StandardScaler, NearestNeighbors, pd.DataFrame]:
+) -> Tuple[StandardScaler, NearestNeighbors, np.ndarray, pd.DataFrame]:
     """
     Build the index from a DataFrame of songs.
 
