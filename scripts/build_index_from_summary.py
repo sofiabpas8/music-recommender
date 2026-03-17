@@ -72,12 +72,14 @@ def main():
     )
     print(f"Loaded {len(df)} tracks from summary (after filtering).")
 
-    scaler, nn, X_scaled, metadata = build_index(
+    #scaler, nn, X_scaled, metadata = build_index(
+    scaler, nn_by_metric, X_scaled, metadata = build_index(
         df,
         FEATURE_COLUMNS,
         n_neighbors=TOP_K + 1,
     )
-    save_index(scaler, nn, X_scaled, metadata, args.index_dir)
+    #save_index(scaler, nn, X_scaled, metadata, args.index_dir)
+    save_index(scaler, nn_by_metric, X_scaled, metadata, args.index_dir)
     print(f"Index saved to {args.index_dir}")
 
 

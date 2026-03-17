@@ -19,4 +19,7 @@ FEATURE_COLUMNS = [
 ]
 
 # Number of recommendations to return
-TOP_K = 5
+TOP_K = 3
+
+# Different distance metrics
+METRICS = ["euclidean", "manhattan", "cosine"]

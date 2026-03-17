@@ -8,13 +8,15 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
+from config.settings import METRICS
 
 
 def build_index(
     df: pd.DataFrame,
     feature_columns: List[str],
     n_neighbors: int = 6,
-) -> Tuple[StandardScaler, NearestNeighbors, np.ndarray, pd.DataFrame]:
+) -> Tuple[StandardScaler, NearestNeighbors, pd.DataFrame]:
+    
     """
     Build the index from a DataFrame of songs.
 
@@ -35,15 +37,22 @@ def build_index(
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    nn = NearestNeighbors(n_neighbors=n_neighbors, metric="euclidean", algorithm="auto")
-    nn.fit(X_scaled)
+    #nn = NearestNeighbors(n_neighbors=n_neighbors, metric="euclidean", algorithm="auto")
+    #nn.fit(X_scaled)
+    nn_by_metric = {}
+
+    for m in METRICS: 
+        nn = NearestNeighbors(n_neighbors=n_neighbors, metric=m, algorithm="auto")
+        nn.fit(X_scaled)
+        nn_by_metric[m] = nn
 
     meta_cols = ["track_id", "title", "artist_name", "genre"]
     metadata = df[[c for c in meta_cols if c in df.columns]].copy()
     if "genre" not in metadata.columns:
         metadata["genre"] = ""
 
-    return scaler, nn, X_scaled, metadata
+    #return scaler, nn, X_scaled, metadata
+    return scaler, nn_by_metric, X_scaled, metadata
 
 
 def get_neighbors(

@@ -40,26 +40,26 @@ def main():
     args = parser.parse_args()
 
     if not args.index_dir.exists():
-        print(f"Index not found at {args.index_dir}. Run scripts/build_index_from_summary.py first.")
+        print(f"Index not found at {args.index_dir}. Run scripts/build_index.py first.")
         sys.exit(1)
 
-    scaler, nn, vectors, metadata = load_index(args.index_dir)
+    #scaler, nn, vectors, metadata = load_index(args.index_dir)
+    scaler, nn_by_metric, vectors, metadata = load_index(args.index_dir)
 
     song_name = args.song_name
-    artist_name = args.artist
     if not song_name or not song_name.strip():
         print("Enter a song name (must be a song from the catalogue):")
         song_name = input().strip()
         if not song_name:
             print("No song name provided.")
             sys.exit(1)
-        print("Enter the artist (helps if more than one song has this title):")
-        artist_name = input().strip() or None
 
-    recs, err = recommend(
-        scaler, nn, vectors, metadata,
+    #recs, err = recommend(
+        #scaler, nn, vectors, metadata,
+    recs_by_metric, err = recommend(
+        scaler,nn_by_metric , vectors, metadata,
         song_name=song_name,
-        artist_name=artist_name,
+        artist_name=args.artist,
         top_k=TOP_K,
     )
 
@@ -67,7 +67,8 @@ def main():
         print(err)
         sys.exit(1)
 
-    print(format_recommendations(recs))
+    #print(format_recommendations(recs))
+    print(format_recommendations(recs_by_metric))
 
 
 if __name__ == "__main__":

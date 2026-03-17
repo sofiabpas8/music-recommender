@@ -41,7 +41,8 @@ def find_song_row(
 
 def recommend(
     scaler: StandardScaler,
-    nn: NearestNeighbors,
+    #nn: NearestNeighbors,
+    nn_by_metric: dict,
     vectors: np.ndarray,
     metadata: pd.DataFrame,
     song_name: str,
@@ -61,25 +62,59 @@ def recommend(
 
     query_vec = vectors[row_index : row_index + 1]
     k = min(top_k + 1, vectors.shape[0])
-    distances, indices = nn.kneighbors(query_vec, n_neighbors=k)
+    #distances, indices = nn.kneighbors(query_vec, n_neighbors=k)
+    #neighbor_indices = indices[0].tolist()
+    #neighbor_indices = [i for i in neighbor_indices if i != row_index][:top_k]
+    #recs = metadata.iloc[neighbor_indices].reset_index(drop=True)
+    #return recs, None
+    
+    recs_by_metric = {}
 
-    neighbor_indices = indices[0].tolist()
-    neighbor_indices = [i for i in neighbor_indices if i != row_index][:top_k]
+    for metric, nn in nn_by_metric.items():
+        distances, indices = nn.kneighbors(query_vec, n_neighbors=k)
 
-    recs = metadata.iloc[neighbor_indices].reset_index(drop=True)
-    return recs, None
+        neighbor_indices = indices[0].tolist()
+        neighbor_indices = [i for i in neighbor_indices if i != row_index][:top_k]
 
+        recs = metadata.iloc[neighbor_indices].reset_index(drop=True)
+        recs_by_metric[metric] = recs
+    
+    return recs_by_metric, None
 
-def format_recommendations(recs: pd.DataFrame) -> str:
+#def format_recommendations(recs: pd.DataFrame) -> str:
     """Format recommendations as a nice-to-read string. Skips genre if missing or nan."""
-    n = len(recs)
-    lines = [f"Here are your {n} recommendations:", ""]
-    for i, row in recs.iterrows():
-        title = row.get("title", "Unknown")
-        artist = row.get("artist_name", "Unknown")
-        genre = row.get("genre", "")
-        if pd.notna(genre) and str(genre).strip():
-            lines.append(f"  {i + 1}. \"{title}\" — {artist} ({genre})")
-        else:
-            lines.append(f"  {i + 1}. \"{title}\" — {artist}")
+    #n = len(recs)
+    #lines = [f"Here are your {n} recommendations:", ""]
+    #for i, row in recs.iterrows():
+        #title = row.get("title", "Unknown")
+        #artist = row.get("artist_name", "Unknown")
+        #genre = row.get("genre", "")
+        #if pd.notna(genre) and str(genre).strip():
+            #lines.append(f"  {i + 1}. \"{title}\" — {artist} ({genre})")
+        #else:
+            #lines.append(f"  {i + 1}. \"{title}\" — {artist}")
+    #return "\n".join(lines)
+
+def format_recommendations(recs_by_metric: dict) -> str:
+    lines = []
+
+    for metric, recs in recs_by_metric.items():
+        n = len(recs)
+
+        lines.append(f"--- {metric.capitalize()} ---")
+        lines.append(f"Here are your {n} recommendations:")
+        lines.append("")
+
+        for i, row in recs.iterrows():
+            title = row.get("title", "Unknown")
+            artist = row.get("artist_name", "Unknown")
+            genre = row.get("genre", "")
+
+            if pd.notna(genre) and str(genre).strip():
+                lines.append(f"  {i + 1}. \"{title}\" — {artist} ({genre})")
+            else:
+                lines.append(f"  {i + 1}. \"{title}\" — {artist}")
+
+        lines.append("") 
+
     return "\n".join(lines)
