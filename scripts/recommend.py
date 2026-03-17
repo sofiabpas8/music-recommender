@@ -46,17 +46,20 @@ def main():
     scaler, nn, vectors, metadata = load_index(args.index_dir)
 
     song_name = args.song_name
+    artist_name = args.artist
     if not song_name or not song_name.strip():
         print("Enter a song name (must be a song from the catalogue):")
         song_name = input().strip()
         if not song_name:
             print("No song name provided.")
             sys.exit(1)
+        print("Enter the artist (helps if more than one song has this title):")
+        artist_name = input().strip() or None
 
     recs, err = recommend(
         scaler, nn, vectors, metadata,
         song_name=song_name,
-        artist_name=args.artist,
+        artist_name=artist_name,
         top_k=TOP_K,
     )
 

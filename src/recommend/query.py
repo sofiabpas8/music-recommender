@@ -71,14 +71,14 @@ def recommend(
 
 
 def format_recommendations(recs: pd.DataFrame) -> str:
-    """Format recommendations as a nice-to-read string."""
+    """Format recommendations as a nice-to-read string. Skips genre if missing or nan."""
     n = len(recs)
     lines = [f"Here are your {n} recommendations:", ""]
     for i, row in recs.iterrows():
         title = row.get("title", "Unknown")
         artist = row.get("artist_name", "Unknown")
         genre = row.get("genre", "")
-        if genre and str(genre).strip():
+        if pd.notna(genre) and str(genre).strip():
             lines.append(f"  {i + 1}. \"{title}\" — {artist} ({genre})")
         else:
             lines.append(f"  {i + 1}. \"{title}\" — {artist}")
