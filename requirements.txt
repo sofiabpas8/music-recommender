@@ -1,0 +1,8 @@
+# Million Song Dataset (HDF5 via PyTables)
+tables>=3.8.0
+
+# Data and ML
+pandas>=1.5.0
+numpy>=1.21.0
+scikit-learn>=1.2.0
+joblib>=1.2.0
