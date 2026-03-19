@@ -69,11 +69,8 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, 
     """
     Finds similar songs based on a song name and optional artist name.
     """
-
-    # Filter by song
     matches = metadata[metadata["title"].str.lower() == song_name.lower()]
 
-    # Optionally filter by artist
     if artist_name:
         matches = matches[matches["artist_name"].str.lower() == artist_name.lower()]
 
@@ -81,19 +78,13 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, 
         return ["Song not found. Try another name."]
 
     idx = matches.index[0]
-
-    # Get vector
     query_vec = vectors[idx].reshape(1, -1)
-
-    # Scale
     query_vec = scaler.transform(query_vec)
-
-    # Nearest neighbors
     distances, indices = nn_model.kneighbors(query_vec, n_neighbors=top_k + 1)
 
     results = []
     for i in indices[0]:
-        if i != idx:  # skip itself
+        if i != idx:
             row = metadata.iloc[i]
             results.append(f"{row['title']} - {row.get('artist_name', 'Unknown')}")
     return results[:top_k]
@@ -105,7 +96,7 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, 
 
 st.set_page_config(page_title="Song Recommender", layout="centered")
 st.title("🎵 Song Recommender")
-st.write("Type a song name to get similar songs for all distance metrics.")
+st.write("Type a song name and optionally an artist, then click Search.")
 
 # Load data
 metadata, vectors, scaler, nn_models = load_assets()
@@ -114,11 +105,14 @@ metadata, vectors, scaler, nn_models = load_assets()
 query_song = st.text_input("Enter song name")
 query_artist = st.text_input("Enter artist name (optional)")
 
-# Run recommendations
-if query_song:
-    with st.spinner("Finding recommendations..."):
-        for metric_name, model in nn_models.items():
-            results = recommend(query_song, metadata, vectors, scaler, model, artist_name=query_artist)
-            st.subheader(f"Recommendations ({metric_name})")
-            for i, r in enumerate(results, 1):
-                st.write(f"{i}. {r}")
+# Search button
+if st.button("Search"):
+    if not query_song:
+        st.warning("Please enter a song name.")
+    else:
+        with st.spinner("Finding recommendations..."):
+            for metric_name, model in nn_models.items():
+                results = recommend(query_song, metadata, vectors, scaler, model, artist_name=query_artist)
+                st.subheader(f"Recommendations ({metric_name})")
+                for i, r in enumerate(results, 1):
+                    st.write(f"{i}. {r}")
