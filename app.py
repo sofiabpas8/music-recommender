@@ -9,7 +9,7 @@ from src.recommend import recommend, format_recommendations
 
 # --- 1. SETUP PATHS & DATA ---
 PROJECT_ROOT = Path(__file__).resolve().parent
-INDEX_PATH = PROJECT_ROOT  # Files are in root
+INDEX_PATH = PROJECT_ROOT / "index"
 SUMMARY_PATH = PROJECT_ROOT / "data" / "msd_summary_file.h5"
 
 print("🚀 Loading Index into memory...")
