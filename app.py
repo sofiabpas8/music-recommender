@@ -72,9 +72,9 @@ def normalize(text):
 # ==============================
 
 def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=1):
-    matches = metadata[metadata["title"].str.lower().str.contains(song_name.lower())]
+    matches = metadata[metadata["title"].str.lower().str.contains(song_name.lower(), na=False)]
     if artist_name:
-        artist_matches = matches[matches["artist_name"].str.lower().str.contains(artist_name.lower())]
+        artist_matches = matches[matches["artist_name"].str.lower().str.contains(artist_name.lower(), na=False)]
 
     if len(artist_matches) > 0:
         matches = artist_matches
