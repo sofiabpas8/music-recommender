@@ -91,7 +91,7 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, 
 st.set_page_config(page_title="🎵 Song Recommender", layout="wide")
 st.title("🎵 Song Recommender")
 st.markdown(
-    "Before searching for a song, please read the instructions in this link "
+    "Before searching for a song, please read the instructions provided in this "
     "[Instruction Form](https://forms.gle/VjB1wjW2EcP9272KA) "
     "and then fill the questionnaire."
 )
