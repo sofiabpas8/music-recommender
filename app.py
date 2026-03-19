@@ -90,7 +90,11 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, 
 
 st.set_page_config(page_title="🎵 Song Recommender", layout="wide")
 st.title("🎵 Song Recommender")
-st.write("Type a song name and optionally an artist, then click **Search**.")
+st.markdown(
+    "Before searching for a song, please read the instructions in this link "
+    "[Instruction Form](https://forms.gle/VjB1wjW2EcP9272KA) "
+    "and then fill the questionnaire."
+)
 
 # Load data
 metadata, vectors, scaler, nn_models = load_assets()
