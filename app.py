@@ -61,14 +61,25 @@ def load_assets():
     return metadata, vectors, scaler, nn_models
 
 # ==============================
+# HELPER
+# ==============================
+
+def normalize(text):
+    return str(text).lower().replace("the ", "").strip()
+
+# ==============================
 # RECOMMENDER
 # ==============================
 
 def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=1):
-    matches = metadata[metadata["title"].str.lower() == song_name.lower()]
+    matches = metadata[metadata["title"].str.lower().str.contains(song_name.lower())]
     if artist_name:
-        matches = matches[matches["artist_name"].str.lower() == artist_name.lower()]
+        artist_matches = matches[matches["artist_name"].str.lower().str.contains(artist_name.lower())]
 
+    if len(artist_matches) > 0:
+        matches = artist_matches
+
+    # --- No results ---
     if len(matches) == 0:
         return ["Song not found. Try another name."]
 
