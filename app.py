@@ -64,7 +64,7 @@ def load_assets():
 # RECOMMENDER
 # ==============================
 
-def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=3):
+def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=1):
     matches = metadata[metadata["title"].str.lower() == song_name.lower()]
     if artist_name:
         matches = matches[matches["artist_name"].str.lower() == artist_name.lower()]
