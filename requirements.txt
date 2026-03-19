@@ -9,4 +9,6 @@ joblib>=1.2.0
 h5py
 
 # Web app
-taipy==3.1.0
+dash
+dash-bootstrap-components
+gunicorn

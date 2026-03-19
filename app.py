@@ -1,76 +1,87 @@
-from taipy.gui import Gui, notify
+import os
 from pathlib import Path
+from dash import Dash, html, dcc, Input, Output, State, callback
+import dash_bootstrap_components as dbc
+
+# Import your existing logic
 from src.index import load_index
 from src.recommend import recommend, format_recommendations
 
-# --- 1. SETUP PATHS & LOAD DATA ---
+# --- 1. SETUP PATHS & DATA ---
 PROJECT_ROOT = Path(__file__).resolve().parent
-INDEX_PATH = PROJECT_ROOT / "index"
+INDEX_PATH = PROJECT_ROOT  # Files are in root
 SUMMARY_PATH = PROJECT_ROOT / "data" / "msd_summary_file.h5"
 
-print("Initializing Recommender... This may take a moment.")
+print("🚀 Loading Index into memory...")
+# In Dash, we load data globally ONCE at startup. 
+# It stays in RAM and is shared by all users.
 scaler, nn_by_metric, vectors, metadata = load_index(INDEX_PATH)
 
-# --- 2. APP STATE ---
-selected_song = ""
-artist_name = ""
-recommendations_output = ""
-show_results = False
+# --- 2. INITIALIZE APP ---
+# We use Bootstrap for a clean layout similar to Streamlit
+app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server # Needed for deployment
 
-def handle_recommend(state):
-    """Function triggered by the button click."""
-    if not state.selected_song.strip():
-        notify(state, "warning", "Please enter a song title.")
-        return
-
-    # Notify user that processing has started
-    notify(state, "info", "Searching for recommendations...")
-    state.show_results = False
+# --- 3. LAYOUT ---
+app.layout = dbc.Container([
+    html.H1("🎶 Instant Music Recommender", className="text-center my-4"),
     
+    dbc.Row([
+        dbc.Col([
+            dbc.Label("🎵 Enter a song title:"),
+            dbc.Input(id="song-input", type="text", placeholder="e.g. Bohemian Rhapsody"),
+        ], width=6),
+        dbc.Col([
+            dbc.Label("🎤 Artist name (optional):"),
+            dbc.Input(id="artist-input", type="text", placeholder="e.g. Queen"),
+        ], width=6),
+    ], className="mb-3"),
+
+    dbc.Row([
+        dbc.Col([
+            dbc.Button("🚀 Recommend Similar Songs", id="recommend-btn", color="primary", className="w-100"),
+        ])
+    ]),
+
+    html.Hr(),
+    
+    dbc.Row([
+        dbc.Col([
+            dcc.Loading( # Shows a spinner while the callback runs
+                id="loading-output",
+                type="default",
+                children=html.Pre(id="recommendation-output", style={"whiteSpace": "pre-wrap", "backgroundColor": "#f8f9fa", "padding": "15px"})
+            )
+        ])
+    ])
+], str_uid="main-container", style={"maxWidth": "800px"})
+
+# --- 4. CALLBACK (The Logic) ---
+@callback(
+    Output("recommendation-output", "children"),
+    Input("recommend-btn", "n_clicks"),
+    State("song-input", "value"),
+    State("artist-input", "value"),
+    prevent_initial_call=True
+)
+def update_recommendations(n_clicks, song_title, artist_name):
+    if not song_title:
+        return "Please enter a song title to begin."
+
+    # Run your original recommendation logic
     recs_by_metric, err = recommend(
-        scaler,
-        nn_by_metric,
-        vectors,
-        metadata,
-        song_name=state.selected_song,
-        artist_name=state.artist_name if state.artist_name.strip() else None,
+        scaler, nn_by_metric, vectors, metadata,
+        song_name=song_title,
+        artist_name=artist_name if artist_name and artist_name.strip() else None,
         top_k=5
     )
 
     if err:
-        state.recommendations_output = f"⚠️ {err}"
-        notify(state, "error", err)
-    else:
-        # Format the results for display
-        state.recommendations_output = format_recommendations(recs_by_metric)
-        state.show_results = True
-        notify(state, "success", "Recommendations ready!")
-
-# --- 3. USER INTERFACE (Markdown) ---
-# <|{variable}|input|> creates a reactive binding
-page = """
-# 🎶 Instant Music Recommender
-
-<|layout|columns=1 1|gap=20px|
-<|{selected_song}|input|label=🎵 Enter a song title:|class_name=fullwidth|>
-<|{artist_name}|input|label=🎤 Artist name (optional):|class_name=fullwidth|>
-|>
-
-<br/>
-<center>
-<|Recommend Similar Songs|button|on_action=handle_recommend|class_name=active|>
-</center>
-
----
-
-### 🎶 Recommendations:
-<|{recommendations_output}|text|raw=True|>
-"""
+        return f"⚠️ {err}"
+    
+    return format_recommendations(recs_by_metric)
 
 if __name__ == "__main__":
-    # run() starts the web server
-    Gui(page=page).run(
-        title="Music Recommender 🎧",
-        dark_mode=True,
-        port=8080
-    )
+    # Use environment port for cloud deployment
+    port = int(os.environ.get("PORT", 8050))
+    app.run_server(debug=False, host="0.0.0.0", port=port)
