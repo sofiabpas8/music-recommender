@@ -6,9 +6,6 @@ pandas>=1.5.0
 numpy>=1.21.0
 scikit-learn>=1.2.0
 joblib>=1.2.0
-h5py
 
 # Web app
-dash
-dash-bootstrap-components
-gunicorn
+streamlit>=1.25.0
