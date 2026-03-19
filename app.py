@@ -43,7 +43,7 @@ def load_assets():
 
     metadata = pd.read_csv(os.path.join(DATA_DIR, "metadata.csv"))
 
-    # Rename columns to match your metadata standard
+    # Rename columns
     if "song" in metadata.columns:
         metadata = metadata.rename(columns={"song": "title"})
     if "artist" in metadata.columns:
@@ -60,17 +60,12 @@ def load_assets():
 
     return metadata, vectors, scaler, nn_models
 
-
 # ==============================
 # RECOMMENDER
 # ==============================
 
-def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=5):
-    """
-    Finds similar songs based on a song name and optional artist name.
-    """
+def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=3):
     matches = metadata[metadata["title"].str.lower() == song_name.lower()]
-
     if artist_name:
         matches = matches[matches["artist_name"].str.lower() == artist_name.lower()]
 
@@ -89,30 +84,38 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, 
             results.append(f"{row['title']} - {row.get('artist_name', 'Unknown')}")
     return results[:top_k]
 
-
 # ==============================
 # UI
 # ==============================
 
-st.set_page_config(page_title="Song Recommender", layout="centered")
+st.set_page_config(page_title="🎵 Song Recommender", layout="wide")
 st.title("🎵 Song Recommender")
-st.write("Type a song name and optionally an artist, then click Search.")
+st.write("Type a song name and optionally an artist, then click **Search**.")
 
 # Load data
 metadata, vectors, scaler, nn_models = load_assets()
 
-# Input fields
-query_song = st.text_input("Enter song name")
-query_artist = st.text_input("Enter artist name (optional)")
+# Inputs in two columns
+col1, col2 = st.columns([3, 1])
+with col1:
+    query_song = st.text_input("Enter song name")
+    query_artist = st.text_input("Enter artist name (optional)")
+with col2:
+    search_clicked = st.button("Search")
 
-# Search button
-if st.button("Search"):
+st.markdown("---")
+
+# Run recommendations
+if search_clicked:
     if not query_song:
         st.warning("Please enter a song name.")
     else:
         with st.spinner("Finding recommendations..."):
-            for metric_name, model in nn_models.items():
-                results = recommend(query_song, metadata, vectors, scaler, model, artist_name=query_artist)
-                st.subheader(f"Recommendations ({metric_name})")
-                for i, r in enumerate(results, 1):
-                    st.write(f"{i}. {r}")
+            # Use columns to display metrics side by side
+            cols = st.columns(len(nn_models))
+            for idx, (metric_name, model) in enumerate(nn_models.items()):
+                with cols[idx]:
+                    st.subheader(f"{metric_name}")
+                    results = recommend(query_song, metadata, vectors, scaler, model, artist_name=query_artist)
+                    for i, r in enumerate(results, 1):
+                        st.markdown(f"**{i}.** {r}")
