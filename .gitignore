@@ -45,3 +45,9 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+
+# Un-ignore the data needed for the website
+!data/msd_summary_file.h5
+!*.pkl
+!*.joblib

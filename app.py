@@ -1,60 +1,76 @@
-# app.py
-import streamlit as st
+from taipy.gui import Gui, notify
 from pathlib import Path
 from src.index import load_index
 from src.recommend import recommend, format_recommendations
 
-# -----------------------
-# 1. Load prebuilt index
-# -----------------------
+# --- 1. SETUP PATHS & LOAD DATA ---
 PROJECT_ROOT = Path(__file__).resolve().parent
-INDEX_DIR = PROJECT_ROOT / "index"  # <-- full path relative to app.py
+INDEX_PATH = PROJECT_ROOT / "index"
+SUMMARY_PATH = PROJECT_ROOT / "data" / "msd_summary_file.h5"
 
-st.set_page_config(
-    page_title="Music Recommender 🎵",
-    page_icon="🎧",
-    layout="centered"
-)
+print("Initializing Recommender... This may take a moment.")
+scaler, nn_by_metric, vectors, metadata = load_index(INDEX_PATH)
 
-st.title("🎶 Instant Music Recommender")
+# --- 2. APP STATE ---
+selected_song = ""
+artist_name = ""
+recommendations_output = ""
+show_results = False
 
-# Load index (only once)
-@st.cache_resource
-def load_recommender(index_dir):
-    scaler, nn_by_metric, vectors, metadata = load_index(index_dir)
-    return scaler, nn_by_metric, vectors, metadata
+def handle_recommend(state):
+    """Function triggered by the button click."""
+    if not state.selected_song.strip():
+        notify(state, "warning", "Please enter a song title.")
+        return
 
-scaler, nn_by_metric, vectors, metadata = load_recommender(INDEX_DIR)
+    # Notify user that processing has started
+    notify(state, "info", "Searching for recommendations...")
+    state.show_results = False
+    
+    recs_by_metric, err = recommend(
+        scaler,
+        nn_by_metric,
+        vectors,
+        metadata,
+        song_name=state.selected_song,
+        artist_name=state.artist_name if state.artist_name.strip() else None,
+        top_k=5
+    )
 
-# -----------------------
-# 2. Song selection
-# -----------------------
-song_list = sorted(metadata['title'].dropna().unique())
-#selected_song = st.selectbox("🎵 Select a song:", song_list)
-selected_song = st.text_input("🎵 Enter a song title:")
-artist_name = st.text_input("🎤 Artist name (optional):", "")
-
-# -----------------------
-# 3. Recommendation
-# -----------------------
-if st.button("🚀 Recommend Similar Songs"):
-    if not selected_song.strip():
-        st.warning("Please select a song.")
+    if err:
+        state.recommendations_output = f"⚠️ {err}"
+        notify(state, "error", err)
     else:
-        with st.spinner("Finding similar songs..."):
-            recs_by_metric, err = recommend(
-                scaler,
-                nn_by_metric,
-                vectors,
-                metadata,
-                song_name=selected_song,
-                artist_name=artist_name if artist_name.strip() else None,
-                top_k=5
-            )
+        # Format the results for display
+        state.recommendations_output = format_recommendations(recs_by_metric)
+        state.show_results = True
+        notify(state, "success", "Recommendations ready!")
 
-        if err:
-            st.warning(err)
-        else:
-            st.success("🎶 Recommendations:")
-            formatted = format_recommendations(recs_by_metric)
-            st.text(formatted)
+# --- 3. USER INTERFACE (Markdown) ---
+# <|{variable}|input|> creates a reactive binding
+page = """
+# 🎶 Instant Music Recommender
+
+<|layout|columns=1 1|gap=20px|
+<|{selected_song}|input|label=🎵 Enter a song title:|class_name=fullwidth|>
+<|{artist_name}|input|label=🎤 Artist name (optional):|class_name=fullwidth|>
+|>
+
+<br/>
+<center>
+<|Recommend Similar Songs|button|on_action=handle_recommend|class_name=active|>
+</center>
+
+---
+
+### 🎶 Recommendations:
+<|{recommendations_output}|text|raw=True|>
+"""
+
+if __name__ == "__main__":
+    # run() starts the web server
+    Gui(page=page).run(
+        title="Music Recommender 🎧",
+        dark_mode=True,
+        port=8080
+    )
