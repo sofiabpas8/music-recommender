@@ -32,22 +32,18 @@ def load_assets():
 
     for file in FILES:
         path = os.path.join(DATA_DIR, file)
-
         if not os.path.exists(path):
             with st.spinner(f"Downloading {file}..."):
                 url = BASE_URL + file
                 r = requests.get(url)
-
                 if r.status_code != 200:
                     raise Exception(f"Failed to download {file}")
-
                 with open(path, "wb") as f:
                     f.write(r.content)
 
-    # Load everything
     metadata = pd.read_csv(os.path.join(DATA_DIR, "metadata.csv"))
 
-    # Rename columns if needed
+    # Rename columns to match your metadata standard
     if "song" in metadata.columns:
         metadata = metadata.rename(columns={"song": "title"})
     if "artist" in metadata.columns:
@@ -57,9 +53,9 @@ def load_assets():
     scaler = joblib.load(os.path.join(DATA_DIR, "scaler.joblib"))
 
     nn_models = {
-        "cosine": joblib.load(os.path.join(DATA_DIR, "nn_cosine.joblib")),
-        "euclidean": joblib.load(os.path.join(DATA_DIR, "nn_euclidean.joblib")),
-        "manhattan": joblib.load(os.path.join(DATA_DIR, "nn_manhattan.joblib")),
+        "Cosine": joblib.load(os.path.join(DATA_DIR, "nn_cosine.joblib")),
+        "Euclidean": joblib.load(os.path.join(DATA_DIR, "nn_euclidean.joblib")),
+        "Manhattan": joblib.load(os.path.join(DATA_DIR, "nn_manhattan.joblib")),
     }
 
     return metadata, vectors, scaler, nn_models
@@ -69,13 +65,17 @@ def load_assets():
 # RECOMMENDER
 # ==============================
 
-def recommend(song_name, metadata, vectors, scaler, nn_model, top_k=5):
+def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=5):
     """
-    Finds similar songs based on a song name.
+    Finds similar songs based on a song name and optional artist name.
     """
 
-    # Find song index
+    # Filter by song
     matches = metadata[metadata["title"].str.lower() == song_name.lower()]
+
+    # Optionally filter by artist
+    if artist_name:
+        matches = matches[matches["artist_name"].str.lower() == artist_name.lower()]
 
     if len(matches) == 0:
         return ["Song not found. Try another name."]
@@ -92,12 +92,10 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, top_k=5):
     distances, indices = nn_model.kneighbors(query_vec, n_neighbors=top_k + 1)
 
     results = []
-
     for i in indices[0]:
         if i != idx:  # skip itself
             row = metadata.iloc[i]
             results.append(f"{row['title']} - {row.get('artist_name', 'Unknown')}")
-
     return results[:top_k]
 
 
@@ -106,30 +104,21 @@ def recommend(song_name, metadata, vectors, scaler, nn_model, top_k=5):
 # ==============================
 
 st.set_page_config(page_title="Song Recommender", layout="centered")
-
 st.title("🎵 Song Recommender")
-st.write("Type a song name to get similar songs.")
+st.write("Type a song name to get similar songs for all distance metrics.")
 
 # Load data
 metadata, vectors, scaler, nn_models = load_assets()
 
-# Metric selector
-metric = st.selectbox("Similarity metric", ["cosine", "euclidean", "manhattan"])
+# Input fields
+query_song = st.text_input("Enter song name")
+query_artist = st.text_input("Enter artist name (optional)")
 
-# Input
-query = st.text_input("Enter song name")
-
-# Run
-if query:
+# Run recommendations
+if query_song:
     with st.spinner("Finding recommendations..."):
-        results = recommend(
-            query,
-            metadata,
-            vectors,
-            scaler,
-            nn_models[metric]
-        )
-
-    st.subheader("Recommendations")
-    for i, r in enumerate(results, 1):
-        st.write(f"{i}. {r}")
+        for metric_name, model in nn_models.items():
+            results = recommend(query_song, metadata, vectors, scaler, model, artist_name=query_artist)
+            st.subheader(f"Recommendations ({metric_name})")
+            for i, r in enumerate(results, 1):
+                st.write(f"{i}. {r}")
