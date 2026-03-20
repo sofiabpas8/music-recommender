@@ -1,6 +1,6 @@
 # Song recommender (Million Song Dataset)
 
-A **content-based music recommender** that suggests 5 similar songs given a track from the catalogue. It uses the [Million Song Dataset](http://labrosa.ee.columbia.edu/millionsong/) (MSD) **summary file** (~300 MB): each song is represented by scalar audio features (tempo, key, energy, loudness, etc.), and recommendations are the nearest neighbours in that feature space. No 280 GB download, no vector database, no API keys—everything runs locally.
+A **content-based music recommender** that suggests 3 similar songs given a track from the catalogue. It uses the [Million Song Dataset](http://labrosa.ee.columbia.edu/millionsong/) (MSD) **summary file** (~300 MB): each song is represented by scalar audio features (tempo, key, energy, loudness, etc.), and recommendations are the nearest neighbours in that feature space. No 280 GB download, no vector database, no API keys—everything runs locally.
 
 ---
 
