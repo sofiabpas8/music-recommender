@@ -75,8 +75,7 @@ def main():
     #scaler, nn, X_scaled, metadata = build_index(
     scaler, nn_by_metric, X_scaled, metadata = build_index(
         df,
-        FEATURE_COLUMNS,
-        n_neighbors=TOP_K + 1,
+        FEATURE_COLUMNS
     )
     #save_index(scaler, nn, X_scaled, metadata, args.index_dir)
     save_index(scaler, nn_by_metric, X_scaled, metadata, args.index_dir)
