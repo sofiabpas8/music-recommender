@@ -87,6 +87,16 @@ with col2:
 
 st.markdown("---")
 
+st.write("Looking for:", query_song, query_artist)
+
+matches = metadata[
+    (metadata["title"].str.lower() == query_song.lower()) &
+    (metadata["artist_name"].str.lower() == query_artist.lower())
+]
+
+st.write("Matches found:", len(matches))
+st.write(matches.head())
+
 # Run recommendations
 if search_clicked:
     if not query_song:
