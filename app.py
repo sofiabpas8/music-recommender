@@ -11,7 +11,7 @@ from src.index import load_index
 # CONFIG
 # ==============================
 
-BASE_URL = "https://huggingface.co/datasets/cosita2000/index/"
+BASE_URL = "https://huggingface.co/datasets/cosita2000/index/tree/main"
 
 FILES = [
     "metadata.csv",
@@ -84,18 +84,6 @@ with col1:
     query_artist = st.text_input("Enter artist name (optional)")
 with col2:
     search_clicked = st.button("Search")
-
-st.markdown("---")
-
-st.write("Looking for:", query_song, query_artist)
-
-matches = metadata[
-    (metadata["title"].str.lower() == query_song.lower()) &
-    (metadata["artist_name"].str.lower() == query_artist.lower())
-]
-
-st.write("Matches found:", len(matches))
-st.write(matches.head())
 
 # Run recommendations
 if search_clicked:
