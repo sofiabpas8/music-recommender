@@ -18,8 +18,5 @@ FEATURE_COLUMNS = [
     "danceability",
 ]
 
-# Number of recommendations to return
-TOP_K = 3
-
 # Different distance metrics
 METRICS = ["euclidean", "manhattan", "cosine"]
