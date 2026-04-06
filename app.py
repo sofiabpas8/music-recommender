@@ -11,7 +11,7 @@ from src.index import load_index
 # CONFIG
 # ==============================
 
-BASE_URL = "https://huggingface.co/datasets/cosita2000/index/resolve/main/"
+BASE_URL = "https://huggingface.co/datasets/cosita2000/index/"
 
 FILES = [
     "metadata.csv",
@@ -103,7 +103,7 @@ if search_clicked:
         st.warning("Please enter a song name.")
     else:
         with st.spinner("Finding recommendations..."):
-            # Use columns to display metrics side by side
+            # Use columns to display metrics side by sid
             recs_by_metric, err = recommend(
             nn_models, vectors, metadata,
             query_song,
