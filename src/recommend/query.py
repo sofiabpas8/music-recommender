@@ -22,7 +22,7 @@ def find_song_row(
     meta["_title_lower"] = meta[title_col].astype(str).str.lower().str.strip()
     query_title = song_name.lower().strip()
 
-    mask = meta["_title_lower"].str.contains(query_title, regex=False, na=False)
+    mask = meta["_title_lower"] == query_title
     matches = meta[mask]
 
     if matches.empty:
@@ -32,10 +32,9 @@ def find_song_row(
     if artist_name:
         artist_lower = artist_name.lower().strip()
         for idx in matches.index:
-            if "artist_name" in meta.columns and str(meta.loc[idx, "artist_name"]).lower().strip() == artist_lower:
+            if str(meta.loc[idx, "artist_name"]).lower().strip() == artist_lower:
                 return int(idx)
-            else:
-                return None
+        return None
     return int(matches.index[0])
 
 
