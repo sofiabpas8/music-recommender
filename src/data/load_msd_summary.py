@@ -56,7 +56,7 @@ def load_summary_dataframe(
         drop_na_features: If True, drop rows with NaN or invalid features.
 
     Returns:
-        DataFrame with track_id, title, artist_name, genre (empty), year, and feature columns.
+        DataFrame with track_id, title, artist_name, and feature columns.
     """
     if tables is None:
         raise ImportError("PyTables is required. Install with: pip install tables")
@@ -121,22 +121,10 @@ def load_summary_dataframe(
             else [0.0] * n
         )
 
-        # Year from musicbrainz if present
-        if hasattr(h5.root, "musicbrainz") and hasattr(h5.root.musicbrainz, "songs"):
-            mb = h5.root.musicbrainz.songs
-            if mb.nrows == n and hasattr(mb.cols, "year"):
-                year = mb.cols.year[:]
-            else:
-                year = [0] * n
-        else:
-            year = [0] * n
-
     df = pd.DataFrame({
         "track_id": track_id,
         "title": title,
         "artist_name": artist_name,
-        "genre": "",  # Summary file has no artist_terms
-        "year": year,
         "tempo": _to_float(tempo),
         "key": _to_int(key),
         "mode": _to_int(mode),
