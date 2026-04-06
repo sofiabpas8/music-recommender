@@ -1,12 +1,10 @@
 """
 Query the index by song name and return formatted recommendations.
 """
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from sklearn.neighbors import NearestNeighbors
-from sklearn.preprocessing import StandardScaler
 
 
 def find_song_row(
@@ -40,7 +38,6 @@ def find_song_row(
 
 
 def recommend(
-    scaler: StandardScaler,
     nn_by_metric: dict,
     vectors: np.ndarray,
     metadata: pd.DataFrame,
