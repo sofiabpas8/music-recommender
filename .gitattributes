@@ -1,2 +1,0 @@
-data/msd_summary.h5 filter=lfs diff=lfs merge=lfs -text
-data/index/* filter=lfs diff=lfs merge=lfs -text
