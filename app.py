@@ -4,6 +4,8 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import joblib
+from src.recommend.query import recommend, format_recommendations
+from src.index import load_index
 
 # ==============================
 # CONFIG
@@ -53,47 +55,12 @@ def load_assets():
     scaler = joblib.load(os.path.join(DATA_DIR, "scaler.joblib"))
 
     nn_models = {
-        "Cosine": joblib.load(os.path.join(DATA_DIR, "nn_cosine.joblib")),
-        "Euclidean": joblib.load(os.path.join(DATA_DIR, "nn_euclidean.joblib")),
-        "Manhattan": joblib.load(os.path.join(DATA_DIR, "nn_manhattan.joblib")),
+        "cosine": joblib.load(os.path.join(DATA_DIR, "nn_cosine.joblib")),
+        "euclidean": joblib.load(os.path.join(DATA_DIR, "nn_euclidean.joblib")),
+        "manhattan": joblib.load(os.path.join(DATA_DIR, "nn_manhattan.joblib")),
     }
 
     return metadata, vectors, scaler, nn_models
-
-# ==============================
-# HELPER
-# ==============================
-
-def normalize(text):
-    return str(text).lower().replace("the ", "").strip()
-
-# ==============================
-# RECOMMENDER
-# ==============================
-
-def recommend(song_name, metadata, vectors, scaler, nn_model, artist_name=None, top_k=1):
-    matches = metadata[metadata["title"].str.lower().str.contains(song_name.lower(), na=False)]
-    if artist_name:
-        artist_matches = matches[matches["artist_name"].str.lower().str.contains(artist_name.lower(), na=False)]
-
-    if len(artist_matches) > 0:
-        matches = artist_matches
-
-    # --- No results ---
-    if len(matches) == 0:
-        return ["Song not found. Try another name."]
-
-    idx = matches.index[0]
-    query_vec = vectors[idx].reshape(1, -1)
-    query_vec = scaler.transform(query_vec)
-    distances, indices = nn_model.kneighbors(query_vec, n_neighbors=top_k + 1)
-
-    results = []
-    for i in indices[0]:
-        if i != idx:
-            row = metadata.iloc[i]
-            results.append(f"{row['title']} - {row.get('artist_name', 'Unknown')}")
-    return results[:top_k]
 
 # ==============================
 # UI
@@ -127,10 +94,22 @@ if search_clicked:
     else:
         with st.spinner("Finding recommendations..."):
             # Use columns to display metrics side by side
-            cols = st.columns(len(nn_models))
-            for idx, (metric_name, model) in enumerate(nn_models.items()):
-                with cols[idx]:
-                    st.subheader(f"{metric_name}")
-                    results = recommend(query_song, metadata, vectors, scaler, model, artist_name=query_artist)
-                    for i, r in enumerate(results, 1):
-                        st.markdown(f"**{i}.** {r}")
+            recs_by_metric, err = recommend(
+            scaler, nn_models, vectors, metadata,
+            song_name=query_song,
+            artist_name=query_artist,
+            top_k=3,
+        )
+        if err:
+            st.error(err)
+        else:
+            cols = st.columns(len(recs_by_metric))
+            for col, (metric, recs) in zip(cols, recs_by_metric.items()):
+                with col:
+                    st.subheader(metric.capitalize())
+                    for _, row in recs.iterrows():
+                        genre = row.get("genre", "")
+                        if pd.notna(genre) and str(genre).strip():
+                            st.markdown(f"**{row['title']}** — {row['artist_name']} ({genre})")
+                        else:
+                            st.markdown(f"**{row['title']}** — {row['artist_name']}")
