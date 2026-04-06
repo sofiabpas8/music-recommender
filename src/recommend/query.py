@@ -32,7 +32,7 @@ def find_song_row(
     if artist_name:
         artist_lower = artist_name.lower().strip()
         for idx in matches.index:
-            if str(meta.loc[idx, "artist_name"]).lower().strip() == artist_lower:
+            if artist_lower in str(meta.loc[idx, "artist_name"]).lower().strip():
                 return int(idx)
         return None
     return int(matches.index[0])
