@@ -97,8 +97,8 @@ if search_clicked:
             recs_by_metric, err = recommend(
             nn_models, vectors, metadata,
             query_song,
-            query_artist,
-            top_k=1,
+            1,
+            query_artist
         )
         if err:
             st.error(err)
