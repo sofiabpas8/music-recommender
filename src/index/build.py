@@ -14,7 +14,7 @@ from config.settings import METRICS
 def build_index(
     df: pd.DataFrame,
     feature_columns: List[str],
-) -> Tuple[StandardScaler, NearestNeighbors, pd.DataFrame]:
+) -> Tuple[StandardScaler, dict, np.ndarray, pd.DataFrame]:
     
     """
     Build the index from a DataFrame of songs.
@@ -35,8 +35,6 @@ def build_index(
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    #nn = NearestNeighbors(n_neighbors=n_neighbors, metric="euclidean", algorithm="auto")
-    #nn.fit(X_scaled)
     nn_by_metric = {}
 
     for m in METRICS: 
@@ -49,5 +47,4 @@ def build_index(
     if "genre" not in metadata.columns:
         metadata["genre"] = ""
 
-    #return scaler, nn, X_scaled, metadata
     return scaler, nn_by_metric, X_scaled, metadata
