@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
 """
-Get 5 song recommendations by song name.
+Get song recommendations by song name.
 Usage:
   python scripts/recommend.py "Song Title" [--artist "Artist Name"] [--index-dir PATH]
   python scripts/recommend.py   # interactive: prompts for song name
@@ -12,7 +11,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from config.settings import DEFAULT_INDEX_DIR, TOP_K
+from config.settings import DEFAULT_INDEX_DIR
 from src.index import load_index
 from src.recommend import recommend, format_recommendations
 
@@ -24,6 +23,12 @@ def main():
         nargs="?",
         default=None,
         help="Title of the song (or run without args for interactive mode)",
+    )
+    parser.add_argument(
+        "--k",
+        type=int,
+        default=3,
+        help="Number of songs to recommend (distributed among metrics considered)",
     )
     parser.add_argument(
         "--artist",
@@ -43,7 +48,6 @@ def main():
         print(f"Index not found at {args.index_dir}. Run scripts/build_index.py first.")
         sys.exit(1)
 
-    #scaler, nn, vectors, metadata = load_index(args.index_dir)
     scaler, nn_by_metric, vectors, metadata = load_index(args.index_dir)
 
     song_name = args.song_name
@@ -54,20 +58,17 @@ def main():
             print("No song name provided.")
             sys.exit(1)
 
-    #recs, err = recommend(
-        #scaler, nn, vectors, metadata,
     recs_by_metric, err = recommend(
         scaler,nn_by_metric , vectors, metadata,
         song_name=song_name,
         artist_name=args.artist,
-        top_k=TOP_K,
+        top_k=args.k,
     )
 
     if err:
         print(err)
         sys.exit(1)
 
-    #print(format_recommendations(recs))
     print(format_recommendations(recs_by_metric))
 
 
