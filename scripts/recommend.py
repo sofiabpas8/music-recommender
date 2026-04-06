@@ -28,7 +28,7 @@ def main():
         "--k",
         type=int,
         default=3,
-        help="Number of songs to recommend (distributed among metrics considered)",
+        help="Number of songs to recommend per metric",
     )
     parser.add_argument(
         "--artist",
@@ -59,10 +59,10 @@ def main():
             sys.exit(1)
 
     recs_by_metric, err = recommend(
-        scaler,nn_by_metric , vectors, metadata,
-        song_name=song_name,
-        artist_name=args.artist,
-        top_k=args.k,
+        nn_by_metric, vectors, metadata,
+        song_name,
+        args.k,
+        args.artist,
     )
 
     if err:
