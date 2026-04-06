@@ -95,10 +95,10 @@ if search_clicked:
         with st.spinner("Finding recommendations..."):
             # Use columns to display metrics side by side
             recs_by_metric, err = recommend(
-            scaler, nn_models, vectors, metadata,
-            song_name=query_song,
-            artist_name=query_artist,
-            top_k=3,
+            nn_models, vectors, metadata,
+            query_song,
+            query_artist,
+            top_k=1,
         )
         if err:
             st.error(err)
